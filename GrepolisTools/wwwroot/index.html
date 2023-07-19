@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="module form-module">
+        <div class="form">
+            <h2>Ingresar a tu cuenta</h2>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Usuario" required />
+                <input type="password" id="password" placeholder="Contraseña" required />
+                <button type="submit">Ingresar</button>
+            </form>
+            <button id="show-register">Registrarme</button>
+        </div>
+        <div class="form" id="register-form" style="display: none;">
+            <h2>Crear una cuenta</h2>
+            <form id="register-form">
+                <input type="text" id="new_username" placeholder="Usuario" required />
+                <input type="text" id="name" placeholder="Nombre" required />
+                <input type="password" id="new_password" placeholder="Contraseña" required />
+                <input type="email" id="email" placeholder="Correo Electrónico" required />
+                <button type="submit">Registrarme</button>
+            </form>
+            <button id="show-login">Volver al inicio de sesión</button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

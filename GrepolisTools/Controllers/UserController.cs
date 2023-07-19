@@ -1,8 +1,4 @@
-﻿using GrepolisTools.Data;
-using GrepolisTools.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +6,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GrepolisTools.Models;
 using GrepolisTools.Data;
+using BCrypt.Net;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 namespace GrepolisTools.Controllers
 {
@@ -42,13 +43,11 @@ namespace GrepolisTools.Controllers
                 return BadRequest("El nombre de usuario o correo electrónico ya existe");
             }
 
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
-
             var user = new User
             {
                 Username = userDto.Username,
                 Name = userDto.Name,
-                Password = hashedPassword,
+                Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
                 Email = userDto.Email,
                 RoleId = userDto.RoleId,
                 AllianceId = userDto.AllianceId,
@@ -58,7 +57,7 @@ namespace GrepolisTools.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(user);
+            return CreatedAtAction(nameof(GetUsers), new { id = user.Id }, user);
         }
 
         // POST: api/User/login
@@ -67,21 +66,26 @@ namespace GrepolisTools.Controllers
         {
             var user = await _context.Users.SingleOrDefaultAsync(x => x.Username == loginDto.Username);
 
-            if (user == null)
+            if (user == null || !BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password))
             {
-                return Unauthorized("Nombre de usuario inválido");
+                return Unauthorized("Nombre de usuario o contraseña inválidos");
             }
 
-            var passwordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.Password);
-
-            if (!passwordValid)
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes("your_secret_key_here"); // Deberías mover esta clave secreta a la configuración de la aplicación
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                return Unauthorized("Contraseña incorrecta");
-            }
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.Username)
+                    // Puedes agregar más reclamaciones aquí si lo necesitas
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            // Deberías generar y devolver un token JWT aquí
-            // Por ahora, devolveremos una cadena de texto estática como marcador de posición
-            return "Esto debería ser un token JWT";
+            return tokenHandler.WriteToken(token);
         }
 
         // PUT: api/User/5
