@@ -32,7 +32,7 @@ namespace GrepolisTools.Controllers
             return await _context.Users.ToListAsync();
         }
 
-        // POST: api/User
+        // POST: api/User (Registro)
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(UserDto userDto)
         {
